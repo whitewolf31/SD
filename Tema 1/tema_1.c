@@ -100,6 +100,7 @@ int check_start_command(node_t *list) {
 }
 
 void free_list(node_t **list) {
+    if (*list == NULL) return;
     while ((*list)->next != NULL) {
         *list = (*list)->next;
         free((*list)->prev);
@@ -154,23 +155,34 @@ stack_node_t *generateStackNode(node_t *command, node_t *list, node_t *back, int
 void pop_and_undo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **cursor) {
     while ((*undo_stack)->size != 0) {
         stack_node_t *helper = (*undo_stack)->front;
-        if (helper->stop) add_to_stack(redo_stack, generateStackNode(helper->command, NULL, NULL, 0, 0, 0));
-        if (helper->list != NULL) {
-            // First we free the memory of the inserted text
-            node_t *looper = helper->list->prev;
-            if (looper == NULL) looper = (*cursor)->first;
-            else looper = looper->next;
-            while(looper != helper->back->next) {
-                node_t *helper2 = looper;
-                looper = looper->next;
-                free(helper2);
-            }
+        if (helper->command == NULL) {
+            if (helper->list == NULL) helper->list = (*cursor)->first;
+            add_to_stack(redo_stack, generateStackNode(helper->command, helper->list, helper->back, 0, (*cursor)->c, (*cursor)->line));
             if (helper->list->prev == NULL) {
-                (*cursor)->first = helper->list;
+                (*cursor)->first = helper->back->next;
             } else {
-                helper->list->prev->next = helper->list;
+                helper->list->prev->next = helper->back->next;
+                helper->back->next->prev = helper->list->prev;
             }
-            if (helper->back->next != NULL) helper->back->next->prev = helper->back;
+        } else {
+            if (helper->stop) add_to_stack(redo_stack, generateStackNode(helper->command, NULL, NULL, 0, 0, 0));
+            if (helper->list != NULL) {
+                // First we free the memory of the inserted text
+                node_t *looper = helper->list->prev;
+                if (looper == NULL) looper = (*cursor)->first;
+                else looper = looper->next;
+                while(looper != helper->back->next) {
+                    node_t *helper2 = looper;
+                    looper = looper->next;
+                    free(helper2);
+                }
+                if (helper->list->prev == NULL) {
+                    (*cursor)->first = helper->list;
+                } else {
+                    helper->list->prev->next = helper->list;
+                }
+                if (helper->back->next != NULL) helper->back->next->prev = helper->back;
+            }
         }
         change_cursor(cursor, helper->prev_line, helper->prev_c);
         if (helper->stop) {
@@ -187,9 +199,26 @@ void pop_and_undo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **curso
 
 void pop_and_redo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **cursor) {
     if ((*redo_stack)->size > 0) {
-        command_decide(undo_stack, redo_stack, (*redo_stack)->front->command, cursor, 0);
         stack_node_t *helper = (*redo_stack)->front;
+        if (helper->command == NULL) {
+            if (helper->list->prev == NULL) {
+                (*cursor)->first = helper->list;
+                if (helper->back->next != NULL) {
+                    helper->back->next->prev = helper->back;
+                }
+            } else {
+                helper->list->prev->next = helper->list;
+                if (helper->back->next != NULL) {
+                    helper->back->next->prev = helper->back;
+                }
+            }
+            change_cursor(cursor, helper->prev_line, helper->prev_c);
+
+        } else {
+            command_decide(undo_stack, redo_stack, helper->command, cursor, 0);
+        }
         (*redo_stack)->front = (*redo_stack)->front->next;
+        free_list(&(helper->command));
         free(helper);
         ((*redo_stack)->size)--;
     }
@@ -199,25 +228,63 @@ void empty_stack(stack_t **stack) {
     stack_node_t *helper;
     while ((*stack)->front != NULL) {
         helper = (*stack)->front;
+        free_list(&(helper->list));
+        free_list(&(helper->command));
         (*stack)->front = (*stack)->front->next;
         free(helper);
     }
     (*stack)->size = 0;
 }
 
-void delete(stack_t **undo_stack, node_t *command, cursor_t **cursor, int type) {
+void copy_list(node_t **start, node_t **end, node_t *list) {
+    node_t *looper = list;
+    while (looper->c != ' ') looper = looper->next;
+    looper = looper->next;
+    *start = looper;
+    while (looper->c != ' ' && looper->c != '\n') looper = looper->next;
+    *end = looper->prev;
+    looper = *start;
+    node_t *helper = (node_t *) malloc(sizeof(node_t));
+    helper->c = looper->c;
+    helper->next = NULL;
+    helper->prev = NULL;
+    node_t *copy = helper;
+    *start = helper;
+    looper = looper->next;
+    while (looper != NULL && looper != (*end)->next) {
+        helper = (node_t *) malloc(sizeof(node_t));
+        helper->c = looper->c;
+        helper->next = NULL;
+        helper->prev = copy;
+        copy->next = helper;
+        copy = helper;
+        looper = looper->next;
+    }
+    *end = helper;
+}
+
+void delete_or_replace(stack_t **undo_stack, node_t *command, cursor_t **cursor, int type, int should_replace) {
     node_t *looper;
     if (type == 1) looper = (*cursor)->current_node->next->next;
     else looper = (*cursor)->first;
     node_t *search = command->next->next->next;
+    node_t *replace, *replace_back;
     node_t *begin = looper;
     node_t *search_begin = search;
     int first = 1;
     while (looper != NULL) {
         if (search->c == ' ' || search->c == '\n') {
             add_to_stack(undo_stack, generateStackNode(command, begin, looper->prev, first, (*cursor)->c, (*cursor)->line));
-            begin->prev->next = looper;
-            looper->prev = begin->prev;
+            if (should_replace) {
+                copy_list(&replace, &replace_back, search_begin);
+                begin->prev->next = replace;
+                replace->prev = begin->prev;
+                looper->prev = replace_back;
+                replace_back->next = looper;
+            } else {
+                begin->prev->next = looper;
+                looper->prev = begin->prev;
+            }
             begin = looper->next;
             first = 0;
             search = search_begin;
@@ -225,6 +292,7 @@ void delete(stack_t **undo_stack, node_t *command, cursor_t **cursor, int type) 
         } else if (search->c != looper->c) {
             begin = looper->next;
             search = search_begin;
+            if (search->c == looper->c) search = search->next;
         } else {
             search = search->next;
         }
@@ -234,8 +302,10 @@ void delete(stack_t **undo_stack, node_t *command, cursor_t **cursor, int type) 
 
 void command_decide(stack_t **undo_stack, stack_t **redo_stack, node_t *current_line, cursor_t ** cursor, int redo_stack_call) {
     if (current_line->c == 'u') {
+        free_list(&current_line);
         pop_and_undo(undo_stack, redo_stack, cursor);
     } else if(current_line->c == 'r' && (current_line->next->c == '\n' || current_line->next->c == ' ')) {
+        free_list(&current_line);
         pop_and_redo(undo_stack, redo_stack, cursor);
     } else if(current_line->c == 'q') {
         if (redo_stack_call) empty_stack(redo_stack);
@@ -331,16 +401,27 @@ void command_decide(stack_t **undo_stack, stack_t **redo_stack, node_t *current_
             (*cursor)->current_node->next = looper->next;
         }
     } else if(current_line->c == 'r' && current_line->next->c == 'e') {
-        if (redo_stack_call) empty_stack(redo_stack);          
+        if (redo_stack_call) empty_stack(redo_stack);
+        delete_or_replace(undo_stack, current_line, cursor, 1, 1);
     } else if(current_line->c == 'r' && current_line->next->c == 'a') {
-        if (redo_stack_call) empty_stack(redo_stack);            
+        if (redo_stack_call) empty_stack(redo_stack);
+        delete_or_replace(undo_stack, current_line, cursor, 2, 1);         
     } else if(current_line->c == 'd' && current_line->next->c == 'w') {
         if (redo_stack_call) empty_stack(redo_stack);            
-        delete(undo_stack, current_line, cursor, 1);
+        delete_or_replace(undo_stack, current_line, cursor, 1, 0);
     } else if(current_line->c == 'd' && current_line->next->c == 'a') {
         if (redo_stack_call) empty_stack(redo_stack);
-        delete(undo_stack, current_line, cursor, 2);         
+        delete_or_replace(undo_stack, current_line, cursor, 2, 0);         
     } 
+}
+
+void save_file(node_t *start) {
+    FILE *out = fopen("/home/laurentiu/Scoala/Structuri de Date/Tema 1/editor.out", "w");
+    while (start != NULL) {
+        fprintf(out, "%c", start->c);
+        start = start->next;
+    }
+    fclose(out);
 }
 
 int main(int argc, char *argv[]) {
@@ -351,27 +432,54 @@ int main(int argc, char *argv[]) {
     cursor->current_node = NULL;
     cursor->line = 1;
     cursor->c = 1;
-    FILE *in, *out;
+    FILE *in;
     in = fopen("/home/laurentiu/Scoala/Structuri de Date/Tema 1/editor.in", "r+");
-    out = fopen("/home/laurentiu/Scoala/Structuri de Date/Tema 1/editor.out", "w");
-    if (in == NULL || out == NULL) return 1;
+    if (in == NULL) return 1;
     char current;
     int command_mode = 0;
-    node_t * current_line = (node_t *) malloc(sizeof(node_t));
-    current_line = NULL;
+    node_t * current_line = NULL;
+    node_t * last_front = cursor->first;
+    node_t * last_back;
+    int prev_c = 1;
+    int prev_line = 1;
     do {
         node_t *new_char = (node_t *) malloc(sizeof(node_t));
         current = fgetc(in);
-        if (feof(in)) break;
+        if (feof(in)) {
+            free(new_char);
+            break;
+        }
         new_char->c = current;
         new_char->next = NULL;
         new_char->prev = NULL;
         add_to_list(&current_line, new_char);
         if (current == '\n') {
             if (check_start_command(current_line)) {
+                free_list(&current_line);
+                if (!command_mode) {
+                    if (last_front != NULL) last_front = last_front->next;
+                    last_back = cursor->current_node;
+                    add_to_stack(&undo_stack, generateStackNode(NULL, last_front, last_back, 1, prev_c, prev_line));
+                    prev_c = cursor->c + 1;
+                    prev_line = cursor->line;
+                } else {
+                    last_front = cursor->current_node;
+                }
                 command_mode = !command_mode;
             } else if(command_mode) {
-                command_decide(&undo_stack, &redo_stack, current_line, &cursor, 1);
+                if (current_line->c == 's') {
+                    free_list(&current_line);
+                    save_file(cursor->first);
+                    empty_stack(&undo_stack);
+                    empty_stack(&redo_stack);
+                } else if (current_line->c == 'q') {
+                    free_list(&current_line);
+                    empty_stack(&undo_stack);
+                    empty_stack(&redo_stack);
+                    break;
+                } else {
+                    command_decide(&undo_stack, &redo_stack, current_line, &cursor, 1);
+                }
             } else {
                 add_to_cursor_list(&cursor, current_line);
             }
@@ -379,12 +487,13 @@ int main(int argc, char *argv[]) {
         }
     } while (1);
     while (cursor->first != NULL) {
-        printf("%c", cursor->first->c);
         node_t *aux = cursor->first->next;
         free(cursor->first);
         cursor->first = aux;
     }
+    free(cursor);
+    free(undo_stack);
+    free(redo_stack);
     fclose(in);
-    fclose(out);
     return 0;
 }
