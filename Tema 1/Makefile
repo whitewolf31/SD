@@ -6,7 +6,6 @@ all: clean build
 build:
 	$(CC) -o editor tema_1.c $(CFLAGS)
 
-
 .PHONY : clean
 clean:
 	rm -f editor
