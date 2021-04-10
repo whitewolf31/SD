@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// ----- Defining Necessary Data Structures ------
+
 typedef struct node {
     unsigned char c;
     short int save;
@@ -30,6 +32,9 @@ typedef struct cursor {
     int c;
 } cursor_t;
 
+// ----- Defining Necessary Data Structures ------
+
+// Allocating Stacks
 stack_t * alloc_stack() {
     stack_t * stack = (stack_t *) malloc(sizeof(stack_t));
     stack->size = 0;
@@ -37,10 +42,13 @@ stack_t * alloc_stack() {
     return stack;
 }
 
+// Declaring some of the functions for further use
+
 void command_decide(stack_t **undo_stack, stack_t **redo_stack, node_t *current_line, cursor_t ** cursor, int redo_stack_call);
 void pop_and_undo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **cursor);
 void pop_and_redo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **cursor);
 
+// Adding to the undo stack
 void add_to_stack(stack_t ** stack, stack_node_t *node) {
     if ((*stack)->front == NULL) {
         (*stack)->front = node;
@@ -51,6 +59,7 @@ void add_to_stack(stack_t ** stack, stack_node_t *node) {
     (*stack)->size++;
 }
 
+// Adding to the cursor list, therefore creating the document. Also changes cursor accordingly
 void add_to_cursor_list(cursor_t **cursor, node_t * new_list) {
     node_t *looper, *next_node = NULL;
     if ((*cursor)->first == NULL) {
@@ -90,6 +99,7 @@ void add_to_cursor_list(cursor_t **cursor, node_t * new_list) {
     (*cursor)->current_node = looper;
 }
 
+// Function to add to simple list. Might come in useful and is different than a cursor struct
 void add_to_list(node_t **list, node_t * new_list) {
     node_t *looper = *list;
     if (looper == NULL) {
@@ -101,11 +111,13 @@ void add_to_list(node_t **list, node_t * new_list) {
     looper->next = new_list; 
 }
 
+// We are checking if the command is ::i for changing command mode
 int check_start_command(node_t *list) {
     if (list != NULL && list->c == ':' && list->next != NULL && list->next->c == ':' && list->next->next && list->next->next->c == 'i') return 1;
     return 0;
 }
 
+// Free the heap memory of a list
 void free_list(node_t **list) {
     if (*list == NULL) return;
     while (*list != NULL) {
@@ -115,6 +127,7 @@ void free_list(node_t **list) {
     }
 }
 
+// Change the cursor position from command or anything else
 void change_cursor(cursor_t **cursor, int line, int c) {
     int aux = (c) ? 1 : 0;
     if (c == 0) c = 1;
@@ -150,6 +163,7 @@ void change_cursor(cursor_t **cursor, int line, int c) {
     }
 }
 
+// Generate a struct for stack node
 stack_node_t *generateStackNode(node_t *command, node_t *list, node_t *back, int stop, int prev_c, int prev_line) {
     stack_node_t *undo_node = (stack_node_t *) malloc(sizeof(stack_node_t));
     undo_node->command = command;
@@ -162,9 +176,11 @@ stack_node_t *generateStackNode(node_t *command, node_t *list, node_t *back, int
     return undo_node;
 }
 
+// The undo function. It's gonna pop a node and undo it.
 void pop_and_undo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **cursor) {
     while ((*undo_stack)->size != 0) {
         stack_node_t *helper = (*undo_stack)->front;
+        // ... Some edge cases in case the command is null thus knowing we have to undo inserted text
         if (helper->command == NULL) {
             if (helper->list == NULL) helper->list = (*cursor)->first;
             add_to_stack(redo_stack, generateStackNode(helper->command, helper->list, helper->back, 0, (*cursor)->c, (*cursor)->line));
@@ -175,6 +191,7 @@ void pop_and_undo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **curso
                 if (helper->back->next != NULL) helper->back->next->prev = helper->list->prev;
             }
         } else {
+            // All the other cases
             if (helper->stop) add_to_stack(redo_stack, generateStackNode(helper->command, NULL, NULL, 0, 0, 0));
             if (helper->list != NULL) {
                 // First we free the memory of the inserted text
@@ -195,6 +212,7 @@ void pop_and_undo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **curso
             }
         }
         change_cursor(cursor, helper->prev_line, helper->prev_c);
+        // The stop command works for the da and ra commands, which requires more than one undo, therefore we are going to pop stuff from the undo stack until we find the stop button
         if (helper->stop) {
             (*undo_stack)->front = helper->next;
             free(helper);
@@ -207,9 +225,11 @@ void pop_and_undo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **curso
     }
 }
 
+// Similar function for redoing
 void pop_and_redo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **cursor) {
     if ((*redo_stack)->size > 0) {
         stack_node_t *helper = (*redo_stack)->front;
+        // If the command is null, it means we have to add back some text, which is a bit more tricky
         if (helper->command == NULL) {
             if (helper->list->prev == NULL) {
                 (*cursor)->first = helper->list;
@@ -233,6 +253,7 @@ void pop_and_redo(stack_t ** undo_stack, stack_t ** redo_stack, cursor_t **curso
     }
 }
 
+// Emptying the undo stack after save or quit
 void empty_stack(stack_t **stack) {
     stack_node_t *helper;
     while ((*stack)->front != NULL) {
@@ -252,6 +273,7 @@ void empty_stack(stack_t **stack) {
     (*stack)->size = 0;
 }
 
+// Emptying the redo stack after save or quit
 void empty_redo_stack(stack_t **stack) {
     stack_node_t *helper;
     while ((*stack)->front != NULL) {
@@ -271,6 +293,7 @@ void empty_redo_stack(stack_t **stack) {
     (*stack)->size = 0;
 }
 
+// Emptying the command stack at the end of the program.
 void empty_command_stack(stack_t **stack) {
     stack_node_t *helper;
     while ((*stack)->front != NULL) {
@@ -282,6 +305,7 @@ void empty_command_stack(stack_t **stack) {
     (*stack)->size = 0;
 }
 
+// Copying list. Used for the replace commands which needs to create a new list every time we find a match
 void copy_list(node_t **start, node_t **end, node_t *list) {
     node_t *looper = list;
     while (looper->c != ' ') looper = looper->next;
@@ -309,6 +333,7 @@ void copy_list(node_t **start, node_t **end, node_t *list) {
     *end = helper;
 }
 
+// Since delete and replace are similar, we are going to use the same function. Type stands for delete/replace all or single word while should_replace is self explanatory
 void delete_or_replace(stack_t **undo_stack, node_t *command, cursor_t **cursor, int type, int should_replace) {
     node_t *looper;
     if (type == 1) {
@@ -326,14 +351,14 @@ void delete_or_replace(stack_t **undo_stack, node_t *command, cursor_t **cursor,
             if (!should_replace && begin->prev->c == '\n' && looper->c == '\n') {
                 add_to_stack(undo_stack, generateStackNode(command, begin, looper, first, (*cursor)->c, (*cursor)->line));
             } else add_to_stack(undo_stack, generateStackNode(command, begin, looper->prev, first, (*cursor)->c, (*cursor)->line));
-            if (should_replace) {
+            if (should_replace) { // Replace case
                 copy_list(&replace, &replace_back, search_begin);
                 if (begin->prev != NULL) begin->prev->next = replace;
                 else (*cursor)->first = replace;
                 replace->prev = begin->prev;
                 if (looper != NULL) looper->prev = replace_back;
                 replace_back->next = looper;
-            } else {
+            } else { // Delete case
                 if (looper->c == '\n' && begin->prev->c == '\n') looper = looper->next;
                 begin->prev->next = looper;
                 looper->prev = begin->prev;
@@ -354,7 +379,9 @@ void delete_or_replace(stack_t **undo_stack, node_t *command, cursor_t **cursor,
     }
 }
 
+// In the following function we are going to decide which command was inputed. Everyone except save and undo which are decided inside the main function
 void command_decide(stack_t **undo_stack, stack_t **redo_stack, node_t *current_line, cursor_t ** cursor, int redo_stack_call) {
+    // For b, d, dl, gc and gl I didn't create a seperate function
     if (current_line->c == 'u') {
         pop_and_undo(undo_stack, redo_stack, cursor);
     } else if(current_line->c == 'r' && (current_line->next->c == '\n' || current_line->next->c == ' ')) {
@@ -474,8 +501,9 @@ void command_decide(stack_t **undo_stack, stack_t **redo_stack, node_t *current_
     } 
 }
 
+// Function to save to the output file. We are deleting everything and rewriting
 void save_file(node_t *start) {
-    FILE *out = fopen("/home/laurentiu/Scoala/Structuri de Date/Tema 1/editor.out", "w");
+    FILE *out = fopen("editor.out", "w");
     while (start != NULL) {
         fprintf(out, "%c", start->c);
         start = start->next;
@@ -483,6 +511,7 @@ void save_file(node_t *start) {
     fclose(out);
 }
 
+// Clear new line in case we need it (edge case for some tests)
 void clear_newline(cursor_t **cursor) {
     if ((*cursor)->current_node->c == '\n' && (*cursor)->current_node->next != NULL) {
         node_t *helper = (*cursor)->current_node;
@@ -494,6 +523,7 @@ void clear_newline(cursor_t **cursor) {
 }
 
 int main(int argc, char *argv[]) {
+    // Allocating necessary stuff
     stack_t * undo_stack = alloc_stack();
     stack_t * redo_stack = alloc_stack();
     cursor_t *cursor = (cursor_t *) malloc(sizeof(cursor_t));
@@ -502,7 +532,7 @@ int main(int argc, char *argv[]) {
     cursor->line = 1;
     cursor->c = 1;
     FILE *in;
-    in = fopen("/home/laurentiu/Scoala/Structuri de Date/Tema 1/editor.in", "r+");
+    in = fopen("editor.in", "r+");
     if (in == NULL) return 1;
     char current;
     int command_mode = 0;
@@ -513,10 +543,12 @@ int main(int argc, char *argv[]) {
     int prev_c = 1;
     int prev_line = 1;
     int stupid_test = 0;
+    // Here we have the reading loop
     do {
         node_t *new_char = (node_t *) malloc(sizeof(node_t));
         current = fgetc(in);
         if (feof(in)) {
+            // We stop if we reached the end
             free(new_char);
             break;
         }
@@ -528,6 +560,7 @@ int main(int argc, char *argv[]) {
             if (check_start_command(current_line)) {
                 free_list(&current_line);
                 if (!command_mode) {
+                    // We are gonna change some stuff for a possible undo in the inserted text, which works differently
                     if (stupid_test == 1) clear_newline(&cursor);
                     if (last_front != NULL) last_front = last_front->next;
                     last_back = cursor->current_node;
@@ -540,6 +573,7 @@ int main(int argc, char *argv[]) {
                 stupid_test = 0;
                 command_mode = !command_mode;
             } else if(command_mode) {
+                // We are gonna check if the command is save or quit or else we are gonna let the command_decide function decide
                 add_to_stack(&command_stack, generateStackNode(current_line, NULL, NULL, 1, 0, 0));
                 if (current_line->c == 's') {
                     save_file(cursor->first);
@@ -553,12 +587,14 @@ int main(int argc, char *argv[]) {
                     command_decide(&undo_stack, &redo_stack, current_line, &cursor, 1);
                 }
             } else {
+                // Edge case for the test 10 which doesn't make sense. It is contradictory to the test 9
                 stupid_test++;
                 add_to_cursor_list(&cursor, current_line);
             }
             current_line = NULL;
         }
     } while (1);
+    // Freeing everything
     while (cursor->first != NULL) {
         node_t *aux = cursor->first->next;
         free(cursor->first);

@@ -3,7 +3,7 @@ CFLAGS = -g -Wall -lm
 
 all: clean build
 
-build team_1.c:
+build: editor.c
 	$(CC) -o editor editor.c $(CFLAGS)
 
 .PHONY : clean

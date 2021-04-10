@@ -27,19 +27,19 @@ Link to [Github Pages](https://github.com/whitewolf31/SD/tree/master/Tema%201)
 
 The program is a minimal text editor which works in the following way. It will take line inputs from a file and put them inside a list. Not unlike vim, you can go into terminal mode via the `::i` command. There you have a multitude of possible commands:
 
-gl line - Move cursor to line
-gc char (line) - Move cursor to certain position of the line
-b - delete letter before cursor
-d (num) - delete num of characters after the cursor. If num misses it is 1
-dl line - delete certain line
-dw word - delete first appearance of word after cursor
-da word - delete every occurence of the word from the whole text
-re word1 word2 - replace first occurence of word1 with word2 after the cursor
-ra word1 word2 - replace all occurences of word1 with word2 of the whole text
-s - save text to output file
-q - quit without saving
-u - undo last command (Except save)
-r - redo last command
+gl line - Move cursor to line <br />
+gc char (line) - Move cursor to certain position of the line <br />
+b - delete letter before cursor <br />
+d (num) - delete num of characters after the cursor. If num misses it is 1 <br />
+dl line - delete certain line <br />
+dw word - delete first appearance of word after cursor <br />
+da word - delete every occurence of the word from the whole text <br />
+re word1 word2 - replace first occurence of word1 with word2 after the cursor <br />
+ra word1 word2 - replace all occurences of word1 with word2 of the whole text <br />
+s - save text to output file <br />
+q - quit without saving <br />
+u - undo last command (Except save) <br />
+r - redo last command <br />
 
 I used lists that stored every character as a separate field. I also used a cursor which held the current node and the first node. For the undo function I used the fact that lists are awesome. Basically, if you wanted to delete something from the list. I would just remove some of the connections, but not all of them, so that when I wanted to undo, I would only have to redo those connections.
 
