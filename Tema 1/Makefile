@@ -3,8 +3,8 @@ CFLAGS = -g -Wall -lm
 
 all: clean build
 
-build:
-	$(CC) -o editor tema_1.c $(CFLAGS)
+build team_1.c:
+	$(CC) -o editor editor.c $(CFLAGS)
 
 .PHONY : clean
 clean:
