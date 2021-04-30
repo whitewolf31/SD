@@ -1,0 +1,9 @@
+make all - ca sa compilezi totul
+
+pentru exercitiul 1 trebuie pur si simplu rulate functiile
+pentru exercitiul 2 trebuie rulat pe un exemplu de-al meu, sau pe un alt graf pe care il introduci in cod cu functiile corespunzatoare in main.c
+exercitiul 2 se ruleaza cu ./lab9 -c2
+exercitiul 3 se ruleaza cu ./lab9 -c3 START FINISH
+exercitiul 4 se ruleaza cu ./lab9 -c4
+
+** Graful nu poate avea mai mult de 15 noduri

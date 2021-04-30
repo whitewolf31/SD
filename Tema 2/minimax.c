@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "cerinta1.h"
+#include "cerinte.h"
 
 int main(int argc, char *argv[]) {
     if (strcmp(argv[1], "-c1") == 0){

@@ -1,4 +1,4 @@
-#include "cerinta1.h"
+#include "cerinte.h"
 
 void read_num(FILE *in, int *num) {
     char helper;

@@ -1,4 +1,4 @@
-#include "cerinta1.h"
+#include "cerinte.h"
 
 void set_truth(tree_t *tree_node, int our_player_num) {
     int truth = 0;
