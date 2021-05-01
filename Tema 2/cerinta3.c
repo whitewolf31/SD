@@ -1,6 +1,7 @@
 #include "cerinte.h"
 
 void read_num(FILE *in, int *num) {
+    // Se citeste un numar din fisierul de intrare
     char helper;
     int factor = 1;
     *num = 0;
@@ -16,6 +17,7 @@ void read_num(FILE *in, int *num) {
 }
 
 void add_to_queue(queue_t *queue, queue_node_t *node) {
+    // Se adauga in coada un nod pentru a fi parcurs mai tarziu
     if (queue == NULL) return;
     if (queue->size == 0) {
         queue->front = node;
@@ -28,6 +30,7 @@ void add_to_queue(queue_t *queue, queue_node_t *node) {
 }
 
 minmax_tree_t *pop_from_queue(queue_t *queue) {
+    // Se scoate din coada un nod
     if (queue->size == 0) return NULL;
     minmax_tree_t *helper1 = queue->front->tree_node;
     queue_node_t *helper2 = queue->front;
@@ -38,6 +41,7 @@ minmax_tree_t *pop_from_queue(queue_t *queue) {
 }
 
 void create_tree_nodes(queue_t *queue, int is_interior_node, int value, int depth) {
+    // Se genereaza arborele minimax initial citit din fisier, folosind cozi
     minmax_tree_t *current_tree_node = pop_from_queue(queue);
     current_tree_node->depth = depth;
     if (!is_interior_node) {
@@ -60,6 +64,7 @@ void create_tree_nodes(queue_t *queue, int is_interior_node, int value, int dept
 }
 
 void build_minmax_tree(minmax_tree_t *tree_node) {
+    // Se aplica algoritmul minimax asupra arborelui
     if (tree_node->children_length == 0) return;
     int cmp_val;
     for (int i = 0; i < tree_node->children_length; i++) {
@@ -77,6 +82,7 @@ void build_minmax_tree(minmax_tree_t *tree_node) {
 }
 
 void output_minmax_tree(minmax_tree_t *tree_node, FILE *out) {
+    // Se afiseaza arborele creat
     for (int i = 0; i < tree_node->depth; i++) fputc('\t', out);
     fprintf(out, "%d\n", tree_node->value);
     for (int i = 0; i < tree_node->children_length; i++) {

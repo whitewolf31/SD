@@ -1,0 +1,22 @@
+Tema 2 - Game Tree
+
+Cerinta 1 (X si O)
+
+Pentru aceasta cerinta, am ales sa folosesc recursivitatea. Practic am encodat fiecare caracter cu un numar pentru a fi mai usor de stocat si folosit.
+Cream radacina cu tabla data in fisierul de intrare, si pentru fiecare "-" cream un subarbore, fiu cu nodul tata, care avea in loc de acel "-" X sau O in functie de al cui rand este.
+Mergeam apoi recursiv in urmatorul nod, fara coada, ceea ce facea sa creez arborul in adancime.
+
+Cerinta 2 (Arborele SI/SAU)
+
+Pentru aceasta cerinta foloseam codul de la cerinta 1 pentru a crea arborele si parcurgeam arborele in adancime.
+In cazul in care nodul ajuns este frunza, decidem usor daca este True/False.
+Pentru un nod neterminal, facem & cu fiecare fiu daca nu este randul jucatorului nostru sau | daca este randul nostru.
+
+Cerinta 3 (Algoritmul Minimax)
+
+Pentru aceasta cerinta, partea grea este creatul arborului initial. Vom adauga ori (x) ori [x] in coada.
+La fiecare gasire de (x) sau [X] vom scoate din coada un element si o sa cream numarul fiilor sai.
+Daca este [x] pur si simplu il cream drept frunza si ii dam valoarea.
+Daca este (x) vom aloca nr de fii si ii vom adauga si pe ei in coada pt parcurgeri ulterioare.
+La crearea arborelui minimax trebuie sa parcurgem in adancime pana cand gasim un nod terminal
+la nodurile neterminale verificam fii sai si ii luam pe cel mai mare sau pe cel mai mic, in funcite de adancimea la care suntem (Min sau Max).

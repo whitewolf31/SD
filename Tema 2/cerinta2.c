@@ -1,6 +1,8 @@
 #include "cerinte.h"
 
 void set_truth(tree_t *tree_node, int our_player_num) {
+    // Pentru fiecare nod din arbore se seteaza daca este T sau F
+    // Functia este recursiva si se parcurge in adancime arborele
     int truth = 0;
     if (tree_node->to_play != our_player_num) truth = 1;
     for (int i = 0; i < tree_node->children_length; i++) {
@@ -15,6 +17,7 @@ void set_truth(tree_t *tree_node, int our_player_num) {
 }
 
 void output_cer2(tree_t *tree_root, FILE *out) {
+    // Se afiseaza rezultatul
     if (tree_root == NULL) return;
     for (int k = 0; k < tree_root->depth; k++) fputc('\t', out);
     if (tree_root->truth == 1) fputs("T\n", out);

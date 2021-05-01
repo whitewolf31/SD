@@ -3,6 +3,7 @@
 #include "cerinte.h"
 
 int main(int argc, char *argv[]) {
+    // Se verifica care cerinta este
     if (strcmp(argv[1], "-c1") == 0){
         main_cerinta1(argc, argv);
     } 
