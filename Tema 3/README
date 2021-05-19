@@ -1,0 +1,31 @@
+Tema 3 - Ursu Laurentiu Cristian - 312CC
+
+Opinii Generale:
+
+Dupa parerea mea, partea cea mai complicata la aceasta tema a fost sa ne dam seama cum sa cream graful pornind de la fisierul de intrare.
+Asadar voi explica cum am procedat eu.
+
+In primul rand am citit toti actorii si i-am bagat intr-un vector de structura actor, fiecare entitate avand numele actorului si un tabel de adevar, unde la index-ul filmului in care a jucat era true.
+Am parcurs toti actorii si am creat acest vector.
+Apoi de am parcurs acest vector. De la actorul cu pozitia i, parcurgeam doar actorii de dupa el si cream muchiile din graf.
+Muchiile din graf erau create dupa tabelul de adevar al filmul. Verificam pentru fiecare index din tabelul de adevar al actorului din pozitia i daca si pentru actorii de dupa au acelasi film.
+Daca aveau acelasi film, adaugam muchie intre ei.
+Asta a fost crearea grafului.
+
+Cerinta 1
+
+La cerinta 1 trebuie sa cautam cele mai mari productii. Cu alte cuvinte trebuia sa gasim cea mai mare componenta conexa din graf.
+Pentru a face asta am parcurs prin DFS graful. Dupa ce terminam o parcurgere insemna ca am gasit o componenta conexa.
+In funcite de DFS aveam o variabila de sum care sa tina cont prin cate noduri am fost.
+Apoi verificam daca mai exista alte noduri nevizitate, adica alte posibile componente conexe, si parcurgeam si pe acolo DFS si tot asa.
+La sfarsit vedeam care sum este cea mai mare, si aceea era productia cea mai mare.
+
+Cerinta 2
+
+La cerinta 2 trebuia sa cautam lungimea drumului cel mai scurt intre 2 actori, adica gradul de inrudire. Pentru acest lucru am folosit un BFS.
+Acesta folosea cozi si stia dupa o parcurgere gasind nodul destinatie care este drumul cel mai scurt. Daca nu exista drum se intorcea -1.
+
+Cerinta 3
+
+La cerinta 3, trebuia sa gasim punti intre componente conexe. Pentru a face aceasta cerinta am implementat algoritmul lui Tarjan pentru gasire a puntilor
+folosind un DFS modificat.
