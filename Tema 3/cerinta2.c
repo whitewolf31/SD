@@ -13,7 +13,7 @@ typedef struct queue {
     queue_node_t *last;
 } queue_t;
 
-queue_t *init_queue() {
+queue_t *init_queue() { // Initalizare coada pt BFS
     queue_t *queue = (queue_t *) malloc(sizeof(queue_t));
     queue->size = 0;
     queue->first = NULL;
@@ -21,7 +21,7 @@ queue_t *init_queue() {
     return queue;
 }
 
-queue_node_t *generate_queue_node(int value) {
+queue_node_t *generate_queue_node(int value) { // Generare nod pentru coada
     queue_node_t *new_node = (queue_node_t *) malloc(sizeof(queue_node_t));
     new_node->value = value;
     new_node->next = NULL;
@@ -29,7 +29,7 @@ queue_node_t *generate_queue_node(int value) {
     return new_node;
 }
 
-void add_to_queue(queue_t *queue, int value) {
+void add_to_queue(queue_t *queue, int value) { // Adaugare in coada
     queue_node_t *new_node = generate_queue_node(value);
     if (queue->size == 0) {
         queue->first = new_node;
@@ -42,7 +42,7 @@ void add_to_queue(queue_t *queue, int value) {
     queue->size++;
 }
 
-int pop_from_queue(queue_t *queue) {
+int pop_from_queue(queue_t *queue) { // Scoatere din coada
     if (queue->size == 0) return -1;
     int value = queue->last->value;
     queue_node_t *current = queue->last;
@@ -59,6 +59,7 @@ int pop_from_queue(queue_t *queue) {
 }
 
 void BFS(undirected_graph_t *graph, int *visited, int src, int dest) {
+    // BFS pentru a vedea gradul de inrudire al fiecarui nod cu src
     visited[src] = 1;
     queue_t *queue = init_queue();
     add_to_queue(queue, src);
@@ -85,15 +86,15 @@ void main_cerinta2(FILE *in, FILE *out) {
     undirected_graph_t *graph = generate_graph(actor_list, actor_index, movie_number);
     int *visited = (int *) calloc(actor_index, sizeof(int));
     char buffer[MAX_LINE_CHAR];
-    fgets(buffer, MAX_LINE_CHAR, in); // Getting source node
+    fgets(buffer, MAX_LINE_CHAR, in); // Luam nodul sursa
     int found_id_src = check_actor_in_list(actor_list, actor_index, buffer);
-    fgets(buffer, MAX_LINE_CHAR, in); // Getting destination node
+    fgets(buffer, MAX_LINE_CHAR, in); // Luam nodul destinatie
     int found_id_dest = check_actor_in_list(actor_list, actor_index, buffer);
-    if (found_id_src == -1 || found_id_dest == -1) {
+    if (found_id_src == -1 || found_id_dest == -1) { // Daca actorul nu exista in lista
         fprintf(out, "%d\n", -1);
-    } else {
+    } else { // Facem BFS si afisam
         BFS(graph, visited, found_id_src, found_id_dest);
-        if (visited[found_id_dest] == 0) {
+        if (visited[found_id_dest] == 0) { // Daca nu exista cale spre destinatie
             fprintf(out, "%d\n", -1);
         } else {
             fprintf(out, "%d\n", visited[found_id_dest] - 1);

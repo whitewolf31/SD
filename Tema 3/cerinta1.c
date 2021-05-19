@@ -1,6 +1,9 @@
 #include "tema3.h"
 
 int check_actor_in_list(actor_t actor_list[], size_t actor_list_max, char actor_name[]) {
+    // Verificam daca exista actorul in vectorul cu actori
+    // Daca exista returnam indexu-ul lui
+    // Daca nu exista intoarcem -1
     int i;
     for (i = 0; i < actor_list_max; i++) {
         if (strcmp(actor_list[i].name, actor_name) == 0) return i;
@@ -9,13 +12,14 @@ int check_actor_in_list(actor_t actor_list[], size_t actor_list_max, char actor_
 }
 
 undirected_graph_t *generate_graph(actor_t *actor_list, size_t actor_index, int max_movies) {
+    // Generam graful cerut
     undirected_graph_t *graph = init_graph(actor_index);
     int i, j, k;
     for (i = 0; i < actor_index; i++) {
         for (j = i + 1; j < actor_index; j++) {
             for (k = 0; k < max_movies; k++) {
-                if (actor_list[i].movie_ids[k] && actor_list[j].movie_ids[k]) {
-                    add_edge(graph, i, j);
+                if (actor_list[i].movie_ids[k] && actor_list[j].movie_ids[k]) { // Au jucat in acelasi film
+                    add_edge(graph, i, j); // Adaugam muchie
                 }
             }
         }
@@ -24,8 +28,9 @@ undirected_graph_t *generate_graph(actor_t *actor_list, size_t actor_index, int 
 }
 
 void DFS(undirected_graph_t *graph, int *visited, size_t current_node, int *sum, int conex_part) {
+    // DFS pentru a verifica care sunt componentele conexe
     (*sum)++;
-    visited[current_node] = conex_part;
+    visited[current_node] = conex_part; // A cata componenta conex
     node_t *looper = graph->adjList[current_node]->first;
     while(looper != NULL) {
         if (!visited[looper->value]) DFS(graph, visited, looper->value, sum, conex_part);
@@ -34,6 +39,7 @@ void DFS(undirected_graph_t *graph, int *visited, size_t current_node, int *sum,
 }
 
 int check_if_unvisited(int *visited, size_t actor_index) {
+    // Verificam daca mai exista noduri nevizitate de DFS
     int i;
     for (i = 0; i < actor_index; i++) {
         if (visited[i] == 0) return i;
@@ -41,13 +47,13 @@ int check_if_unvisited(int *visited, size_t actor_index) {
     return -1;
 }
 
-int compare_function(const void *el1, const void *el2) {
+int compare_function(const void *el1, const void *el2) { // Functie pentru sortare
     char **s1 = (char **) el1;
     char **s2 = (char **) el2;
     return strcmp(*s1, *s2);
 }
 
-void output(FILE *out, char **output_arr, int max_sum) {
+void output(FILE *out, char **output_arr, int max_sum) { // Functie pentru afisare
     fprintf(out, "%d\n", max_sum);
     int i;
     for (i = 0; i < max_sum; i++) {
@@ -56,6 +62,7 @@ void output(FILE *out, char **output_arr, int max_sum) {
 }
 
 void read_actors(FILE *in, actor_t *actor_list, size_t *actor_index, size_t movie_number) {
+    // Funcite care citeste actorul
     size_t movie_id_index = 0;
     int i, j;
     for (i = 0; i < movie_number; i++) {
@@ -68,10 +75,10 @@ void read_actors(FILE *in, actor_t *actor_list, size_t *actor_index, size_t movi
             int found_id = check_actor_in_list(actor_list, *actor_index, buffer);
             if (found_id == -1) {
                 strcpy(actor_list[*actor_index].name, buffer);
-                actor_list[*actor_index].movie_ids[movie_id_index] = true;
+                actor_list[*actor_index].movie_ids[movie_id_index] = true; // Adauga in tabelul de adevar id-ul filmului in care a jucat
                 (*actor_index)++;
             } else {
-                actor_list[found_id].movie_ids[movie_id_index] = true;
+                actor_list[found_id].movie_ids[movie_id_index] = true; // Adauga in tabelul de adevar id-ul filmului in care a jucat
             }
         }
         movie_id_index++;
@@ -90,7 +97,7 @@ void main_cerinta1(FILE *in, FILE *out) {
     int max_conex_part = 1;
     int *visited = (int *) calloc(actor_index, sizeof(int));
     int current_start = check_if_unvisited(visited, actor_index);
-    while (current_start != -1) {
+    while (current_start != -1) { // Luam index-ul celei mai mari componente conexe cu ajutorul variabilii sum
         int sum = 0;
         DFS(graph, visited, current_start, &sum, current_conex_part);
         if (sum > max_sum) {
@@ -102,13 +109,13 @@ void main_cerinta1(FILE *in, FILE *out) {
     }
     char **output_arr = (char **) malloc(max_sum * sizeof(char *));
     int index = 0;
-    for (i = 0; i < actor_index; i++) {
+    for (i = 0; i < actor_index; i++) { // Adaugam in vectorul de output numele care trebuie afisate
         if (visited[i] == max_conex_part) {
             output_arr[index] = (char *) malloc(50 * sizeof(char *));
             strcpy(output_arr[index++], actor_list[i].name);
         }
     }
-    qsort(output_arr, max_sum, sizeof(*output_arr), compare_function);
+    qsort(output_arr, max_sum, sizeof(*output_arr), compare_function); // Sortam crescator in ordine lexico-grafica
     output(out, output_arr, max_sum);
     // Dealocare memorie
     free(visited);

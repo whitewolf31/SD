@@ -1,6 +1,8 @@
 #include "tema3.h"
 
 int main(int argc, char *argv[]) {
+    // Sursa main unde decidem ce cerinta trebuie rulata
+    // De asemenea aici deschidem fisierele
     FILE *in = fopen(argv[2], "r");
     FILE *out = fopen(argv[3], "w");
     if (strcmp(argv[1], "-c1") == 0) {

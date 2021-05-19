@@ -1,24 +1,25 @@
 #include "tema3.h"
 #define MAX_INT 2147483647
 
-int minimum(int a, int b) {
+int minimum(int a, int b) { // Functie min
     if (a < b) return a;
     return b;
 }
 
 void DFSB(undirected_graph_t *graph, int v, int t, int *idx, int *low, int *pi, int *output_arr, int *index) {
+    // DFS Modificat pentru a putea gasi puntile
     idx[v] = t;
     low[v] = t;
     t++;
     node_t *looper = graph->adjList[v]->first;
     while (looper != NULL) {
         int u = looper->value;
-        if (u != pi[v]) {
-            if (idx[u] == -1) {
+        if (u != pi[v]) { // Verificam sa nu fie parintele
+            if (idx[u] == -1) { // Verificam ca nodul sa nu fie deja vizitat
                 pi[u] = v;
-                DFSB(graph, u, t, idx, low, pi, output_arr, index);
+                DFSB(graph, u, t, idx, low, pi, output_arr, index); // Mergem recursiv in urmatorul nod
                 low[v] = minimum(low[v], low[u]);
-                if (low[u] > idx[v]) {
+                if (low[u] > idx[v]) { // Daca gasim punte adaugam in vectorul de afisare
                     output_arr[*index] = v;
                     output_arr[*index + 1] = u;
                     *index += 2;
@@ -32,6 +33,7 @@ void DFSB(undirected_graph_t *graph, int v, int t, int *idx, int *low, int *pi, 
 }
 
 void punti(undirected_graph_t *graph, int *output_arr, int *index) {
+    // Initializare pentru a gasi punti
     int t = 0, i;
     int *idx = (int *) calloc(graph->num_of_nodes, sizeof(int));
     int *low = (int *) calloc(graph->num_of_nodes, sizeof(int));
@@ -42,7 +44,7 @@ void punti(undirected_graph_t *graph, int *output_arr, int *index) {
         pi[i] = -1;
     }
     for (i = 0; i < graph->num_of_nodes; i++) {
-        if (idx[i] == -1) {
+        if (idx[i] == -1) { // Pentru fiecare componenta conexa rulam DFS modificat
             DFSB(graph, i, t, idx, low, pi, output_arr, index);
         }
     }
@@ -52,6 +54,7 @@ void punti(undirected_graph_t *graph, int *output_arr, int *index) {
 }
 
 char **prepare_output(actor_t *actor_list, int *result_arr, int max_output) {
+    // Functie de pregatire a vectorului de afisare
     int i;
     char **names_output_arr = (char **) malloc(max_output / 2 * sizeof(char *));
     for (i = 0; i < max_output / 2; i++) {
@@ -68,11 +71,11 @@ char **prepare_output(actor_t *actor_list, int *result_arr, int max_output) {
         strcat(names_output_arr[i], second_str);
         names_output_arr[i][strlen(first_str) - 1] = ' ';
     }
-    qsort(names_output_arr, max_output / 2, sizeof(*names_output_arr), compare_function);
+    qsort(names_output_arr, max_output / 2, sizeof(*names_output_arr), compare_function); // Sortam lexico-grafic
     return names_output_arr;
 }
 
-void output_cerinta3(FILE *out, char **names, int num_of_names) {
+void output_cerinta3(FILE *out, char **names, int num_of_names) { // Functie de afisare
     int i;
     fprintf(out, "%d\n", num_of_names);
     for (i = 0; i < num_of_names; i++) {
