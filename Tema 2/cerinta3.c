@@ -21,10 +21,10 @@ void add_to_queue(queue_t *queue, queue_node_t *node) {
     if (queue == NULL) return;
     if (queue->size == 0) {
         queue->front = node;
+        queue->back = node;
     } else {
-        queue_node_t *looper = queue->front;
-        while (looper->next != NULL) looper = looper->next;
-        looper->next = node;
+        queue->back->next = node;
+        queue->back = node;
     }
     (queue->size)++;
 }
@@ -44,6 +44,7 @@ void create_tree_nodes(queue_t *queue, int is_interior_node, int value, int dept
     // Se genereaza arborele minimax initial citit din fisier, folosind cozi
     minmax_tree_t *current_tree_node = pop_from_queue(queue);
     current_tree_node->depth = depth;
+    int i;
     if (!is_interior_node) {
         current_tree_node->value = value;
         current_tree_node->children_length = 0;
@@ -51,7 +52,7 @@ void create_tree_nodes(queue_t *queue, int is_interior_node, int value, int dept
     else {
         current_tree_node->children = (minmax_tree_t **) malloc(value * sizeof(minmax_tree_t*));
         current_tree_node->children_length = value;
-        for (int i = 0; i < value; i++) {
+        for (i = 0; i < value; i++) {
             current_tree_node->children[i] = (minmax_tree_t *) malloc(sizeof(minmax_tree_t));
             current_tree_node->children[i]->children = NULL;
             current_tree_node->children[i]->parent = current_tree_node;
@@ -64,10 +65,11 @@ void create_tree_nodes(queue_t *queue, int is_interior_node, int value, int dept
 }
 
 void build_minmax_tree(minmax_tree_t *tree_node) {
-    // Se aplica algoritmul minimax asupra arborelui
+    // Se aplica algoritmul minimax asupra arborelui]
+    int i;
     if (tree_node->children_length == 0) return;
     int cmp_val;
-    for (int i = 0; i < tree_node->children_length; i++) {
+    for (i = 0; i < tree_node->children_length; i++) {
         build_minmax_tree(tree_node->children[i]);
         if (i == 0) cmp_val = tree_node->children[i]->value;
         else {
@@ -83,9 +85,10 @@ void build_minmax_tree(minmax_tree_t *tree_node) {
 
 void output_minmax_tree(minmax_tree_t *tree_node, FILE *out) {
     // Se afiseaza arborele creat
-    for (int i = 0; i < tree_node->depth; i++) fputc('\t', out);
+    int i;
+    for (i = 0; i < tree_node->depth; i++) fputc('\t', out);
     fprintf(out, "%d\n", tree_node->value);
-    for (int i = 0; i < tree_node->children_length; i++) {
+    for (i = 0; i < tree_node->children_length; i++) {
         output_minmax_tree(tree_node->children[i], out);
     }
     if (tree_node->children != NULL) free(tree_node->children);
@@ -110,7 +113,8 @@ void main_cerinta3(int argc, char *argv[]) {
     add_to_queue(queue, queue_node);
     int depth, is_interior_node, value;
     fscanf(in, "%d\n", &depth);
-    for (int i = 0; i < depth; i++) {
+    int i;
+    for (i = 0; i < depth; i++) {
         while (1) {
             is_interior_node = 0;
             char helper = fgetc(in);

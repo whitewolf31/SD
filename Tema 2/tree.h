@@ -30,6 +30,7 @@ typedef struct queue_node {
 
 typedef struct queue {
     queue_node_t *front;
+    queue_node_t *back;
     size_t size;
 } queue_t;
 
